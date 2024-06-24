@@ -444,7 +444,7 @@ ubuntu@docker-host:~$ uname -a
 Linux docker-host 6.8.0-35-generic #35-Ubuntu SMP PREEMPT_DYNAMIC Mon May 20 15:51:52 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
 ```
 
-This demo proves that [If you run multiple containers, they all share the same kernel, allowing you to run more applications on less infrastructure.](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-container/#:~:text=A container is simply an,more applications on less infrastructure.&text=Quite often%2C you will see containers and VMs used together.)
+This demo proves that if you run multiple containers, they all share the same kernel, allowing you to run more applications on less infrastructure.
 
 Run `ps aux | grep '/bin/sh'` on the host to list container processes:
 
@@ -485,7 +485,7 @@ ubuntu@docker-host:~$ docker ps
 CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
 ```
 
-This demo proves that [A container is simply an isolated process with all of the files it needs to run.](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-container/#:~:text=A container is simply an,more applications on less infrastructure.&text=Quite often%2C you will see containers and VMs used together.)
+This demo proves that a container is simply an isolated process with all of the files it needs to run.
 
 ### Docker Lifecycle Commands
 
