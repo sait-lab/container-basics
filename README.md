@@ -1095,7 +1095,7 @@ YOUR_DOCKER_HUB_USERNAME/concepts-build-image-demo   latest    2f2eb372d6e7   9 
 ubuntu-a                             latest    01339e77b0ed   2 hours ago     78.1MB
 ubuntu                               latest    35a88802559d   2 weeks ago     78.1MB
 ```
-> [!TIP]  
+> [!IMPORTANT]  
 > Replace **YOUR_DOCKER_HUB_USERNAME** with your actual Docker Hub username.
 
 
@@ -1181,6 +1181,10 @@ Status: Downloaded newer image for YOUR_DOCKER_HUB_USERNAME/concepts-build-image
 Using sqlite database at /etc/todos/todo.db
 Listening on port 3000
 ```
+> [!NOTE]  
+> `-p 3000:3000/tcp` binds port 3000 of the container to TCP port 3000 on the host. The Networking overview page explains in detail how to publish ports with Docker.
+> 
+> If you don't specify an IP address (i.e., `-p 80:80` instead of `-p 127.0.0.1:80:80`) when publishing a container's ports, Docker publishes the port on all interfaces (address 0.0.0.0) by default. These ports are externally accessible. 
 
 Don't exit the running container. Open a new SSH session to log into the host. Use `curl` to verify that the container is running correctly.
 
