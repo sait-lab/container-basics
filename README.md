@@ -34,6 +34,21 @@ Distributor ID:	Ubuntu
 Description:	Ubuntu 24.04 LTS
 Release:	24.04
 Codename:	noble
+
+ubuntu@docker-host:~$ cat /etc/os-release
+PRETTY_NAME="Ubuntu 24.04 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
 ```
 
 ```
@@ -53,10 +68,6 @@ Client: Docker Engine - Community
 ```
 
 ## Docker Concepts
-
-<img src="./README.assets/docker-components.jpeg" alt="docker-components" style="zoom:33%;" />
-
-Credit: https://www.slideshare.net/slideshow/docker-41045742/41045742
 
 ### What is a container?
 
@@ -265,7 +276,7 @@ The main components of the Docker engine include the Docker daemon, the build sy
 
 Credit: [Docker - Engine | i2tutorials](https://www.i2tutorials.com/docker-tutorial/docker-engine/)
 
-### Run a container - from the Docker engine's perspective
+### Under the Hood of `docker run`
 
 [UNDERSTANDING DOCKER. 1 — INTRODUCTION : | by B.R.O.L.Y | Medium](https://medium.com/@ridwaneelfilali/docker-explained-86987249ad25)
 
@@ -282,10 +293,397 @@ Under the hood:
 3. containerd itself cannot create containers; it relies on runc for that task. It converts the necessary Docker image into an OCI bundle and instructs runc to use this bundle to create a new container.
 4. runc interacts with the OS kernel to assemble all the necessary constructs for creating a container, such as namespaces and cgroups. The container process begins as a child process of runc, and once it starts, runc exits.
 
-![docker-engine-run-container](./README.assets/docker-engine-run-container.webp)
+![docker-engine-run-container](./README.assets/docker-engine-run-container.webp) 
 
 Credit: [Docker Engine Architecture Under the Hood | by Yeldos Balgabekov | Medium](https://medium.com/@yeldos/docker-engine-architecture-under-the-hood-741512b340d5)
 
+
+
+## Play with Docker
+
+<img src="./README.assets/docker-components.jpeg" alt="docker-components" style="zoom:33%;" />
+Credit: https://www.slideshare.net/slideshow/docker-41045742/41045742
+
+### Review Docker Terms
+
+- **Image**: A container image is a read-only package that includes everything needed to run an application. This includes the application code, dependencies, a minimal set of OS constructs, and metadata. One image can be used to start multiple containers.
+	
+	> [!NOTE]  
+	> Image, Docker image, container image, and OCI image are interchangeable terms.
+- **Container**: A container is simply an isolated process with all of the files it needs to run. If you run multiple containers, they all share the same kernel, allowing you to run more applications on less infrastructure.
+- **Registry**: An image registry is a centralized location for storing and sharing your container images. It can be either public or private. Docker Hub is a public registry that anyone can use and is the default registry.
+
+### Docker CLI Cheat Sheet
+
+[Official Get Started Docker CLI Cheat Sheet](https://docs.docker.com/get-started/docker_cheatsheet.pdf)
+
+[The Ultimate Docker Cheat Sheet | dockerlabs (collabnix.com)](https://dockerlabs.collabnix.com/docker/cheatsheet/)
+
+### Run Two Containers from the Same Image
+
+Start an Alpine Linux container:
+
+```shell
+# This command runs on the host
+docker run -it alpine
+```
+
+Excerpt from [docker run | Docker Docs](https://docs.docker.com/reference/cli/docker/container/run/):
+
+> The `docker run` command runs a command in a new container, pulling the image if needed and starting the container. `-it` options open a shell inside a running container.
+>
+> Option:
+>
+> - `-i` or `--interactive`: Keep STDIN open even if not attached
+> - `-t` or `--tty`: Allocate a pseudo-TTY
+
+You will see output like the following:
+
+```
+Unable to find image 'alpine:latest' locally
+latest: Pulling from library/alpine
+ec99f8b99825: Pull complete
+Digest: sha256:b89d9c93e9ed3597455c90a0b88a8bbb5cb7188438f70953fede212a0c4394e0
+Status: Downloaded newer image for alpine:latest
+/ #
+```
+
+Check the OS information inside the running container:
+```
+# This command runs inside the container
+/ # cat /etc/os-release
+NAME="Alpine Linux"
+ID=alpine
+VERSION_ID=3.20.1
+PRETTY_NAME="Alpine Linux v3.20"
+HOME_URL="https://alpinelinux.org/"
+BUG_REPORT_URL="https://gitlab.alpinelinux.org/alpine/aports/-/issues"
+```
+
+Use `ps aux` to list all processes running inside the container:
+
+```
+# This command runs inside the container
+/ # ps aux
+PID   USER     TIME  COMMAND
+    1 root      0:00 /bin/sh
+    8 root      0:00 ps aux
+```
+
+Create a new file under the root folder:
+
+```
+# This command runs inside the container
+/ # touch /a-new-file.txt
+/ # ls /
+a-new-file.txt  etc             media           proc            sbin            tmp
+bin             home            mnt             root            srv             usr
+dev             lib             opt             run             sys             var
+```
+
+On the host, run `docker container ls` to list containers:
+
+```
+# This command runs on the host
+docker container ls
+CONTAINER ID   IMAGE     COMMAND     CREATED          STATUS          PORTS     NAMES
+6c272c60442b   alpine    "/bin/sh"   19 minutes ago   Up 19 minutes             crazy_faraday
+```
+> [!NOTE]  
+> `crazy_faraday` is the random container name generated by Docker if no container name is specified in the `docker run` command. [moby/pkg/namesgenerator/names-generator.go at master · moby/moby (github.com)](https://github.com/moby/moby/blob/master/pkg/namesgenerator/names-generator.go)
+>
+> `docker container ls` has many aliases: `docker container list` `docker container ps` and `docker ps`. `docker ps` is the most popular one. [docker ps | Docker Docs](https://docs.docker.com/reference/cli/docker/container/ls/)
+
+
+Start another Alpine Linux container using the identical `docker run` command:
+
+```shell
+# This command runs on the host
+docker run -it alpine
+```
+
+On the host, run `docker ps` to list containers:
+
+```
+# This command runs on the host
+docker ps
+CONTAINER ID   IMAGE     COMMAND     CREATED          STATUS          PORTS     NAMES
+5db5a74490d5   alpine    "/bin/sh"   7 seconds ago    Up 6 seconds              reverent_sutherland
+6c272c60442b   alpine    "/bin/sh"   26 minutes ago   Up 26 minutes             crazy_faraday
+```
+
+Create a new file inside `crazy_faraday` container:
+
+```
+# These commands run inside the crazy_faraday container
+/ # touch /a-new-file.txt
+/ # ls /
+a-new-file.txt  etc             media           proc            sbin            tmp
+bin             home            mnt             root            srv             usr
+dev             lib             opt             run             sys             var
+```
+
+List the files inside `reverent_sutherland` container:
+
+```
+# This command runs inside the reverent_sutherland container
+/ # ls /
+bin    etc    lib    mnt    proc   run    srv    tmp    var
+dev    home   media  opt    root   sbin   sys    usr
+```
+
+It's evident that the two containers created from the same image have isolated storage. The `a-new-file.txt` file exists inside `crazy_faraday` container only.
+
+Run `uname -a` on both containers and the host:
+
+```
+# This command runs inside the crazy_faraday container
+/ # uname -a
+Linux 5361e28bfc38 6.8.0-35-generic #35-Ubuntu SMP PREEMPT_DYNAMIC Mon May 20 15:51:52 UTC 2024 x86_64 Linux
+```
+
+```
+# This command runs inside the reverent_sutherland container
+/ # uname -a
+Linux 1d9204993126 6.8.0-35-generic #35-Ubuntu SMP PREEMPT_DYNAMIC Mon May 20 15:51:52 UTC 2024 x86_64 Linux
+```
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ uname -a
+Linux docker-host 6.8.0-35-generic #35-Ubuntu SMP PREEMPT_DYNAMIC Mon May 20 15:51:52 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+```
+
+This demo proves that [If you run multiple containers, they all share the same kernel, allowing you to run more applications on less infrastructure.](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-container/#:~:text=A container is simply an,more applications on less infrastructure.&text=Quite often%2C you will see containers and VMs used together.)
+
+Run `ps aux | grep '/bin/sh'` on the host to list container processes:
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ ps aux | grep '/bin/sh'
+root        2611  0.0  0.0   1724  1024 pts/0    Ss+  00:47   0:00 /bin/sh
+root        3063  0.0  0.0   1724  1024 pts/0    Ss+  01:14   0:00 /bin/sh
+ubuntu      3141  0.0  0.0   6544  2304 pts/2    S+   01:25   0:00 grep --color=auto /bin/sh
+```
+
+Run `exit` inside the `reverent_sutherland` container then run `docker ps` on the host:
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker ps
+CONTAINER ID   IMAGE     COMMAND     CREATED          STATUS          PORTS     NAMES
+6c272c60442b   alpine    "/bin/sh"   40 minutes ago   Up 40 minutes             crazy_faraday
+```
+
+Run `ps aux | grep '/bin/sh'` on the host again to list container processes:
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ ps aux | grep '/bin/sh'
+root        2611  0.0  0.0   1724  1024 pts/0    Ss+  00:47   0:00 /bin/sh
+ubuntu      3200  0.0  0.0   6544  2304 pts/2    S+   01:29   0:00 grep --color=auto /bin/sh
+```
+
+Run `sudo kill -9 2611` on the host to kill the `/bin/sh` process then run `docker ps` on the host:
+
+```
+# These commands run on the host
+ubuntu@docker-host:~$ sudo kill -9 2611
+ubuntu@docker-host:~$ ps aux | grep '/bin/sh'
+ubuntu      3257  0.0  0.0   6544  2304 pts/2    S+   01:30   0:00 grep --color=auto /bin/sh
+ubuntu@docker-host:~$ docker ps
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+```
+
+This demo proves that [A container is simply an isolated process with all of the files it needs to run.](https://docs.docker.com/guides/docker-concepts/the-basics/what-is-a-container/#:~:text=A container is simply an,more applications on less infrastructure.&text=Quite often%2C you will see containers and VMs used together.)
+
+### Docker Lifecycle Commands
+
+List of `docker container` commands: [docker container | Docker Docs](https://docs.docker.com/reference/cli/docker/container/)
+
+#### `docker run -d`
+
+Run container in background and print container ID.
+
+#### `docker ps -a`
+
+Show all containers (default shows just running).
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker ps -a
+CONTAINER ID   IMAGE         COMMAND     CREATED             STATUS                         PORTS     NAMES
+5db5a74490d5   alpine        "/bin/sh"   25 minutes ago      Exited (0) 11 minutes ago                reverent_sutherland
+6c272c60442b   alpine        "/bin/sh"   51 minutes ago      Exited (137) 9 minutes ago               crazy_faraday
+b0a454d2a766   hello-world   "/hello"    About an hour ago   Exited (0) About an hour ago             charming_blackwell
+```
+
+#### `docker start [OPTIONS] CONTAINER`
+
+Start one or more stopped containers.
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker container start 5db5a74490d5
+5db5a74490d5
+ubuntu@docker-host:~$ docker ps
+CONTAINER ID   IMAGE     COMMAND     CREATED          STATUS         PORTS     NAMES
+5db5a74490d5   alpine    "/bin/sh"   26 minutes ago   Up 1 second              reverent_sutherland
+```
+
+#### `docker container attach`
+
+Attach local standard input, output, and error streams to a running container.
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker attach 5db5a74490d5
+/ #
+```
+
+> [!NOTE]  
+> `docker attach` is an alias of `docker container attach`. 
+
+#### `docker container stop`
+
+Stop one or more running containers. The main process inside the container will receive `SIGTERM`, and after a grace period, `SIGKILL`.
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker stop 5db5a74490d5
+5db5a74490d5
+```
+
+Observe the time it takes to stop a container.
+
+#### `docker container kill`
+
+Kill one or more running containers. The main process inside the container is sent `SIGKILL` signal (default), or the signal that is specified with the `--signal` option.
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker kill 5db5a74490d5
+5db5a74490d5
+```
+
+Observe the time it takes to kill a container.
+
+#### `docker stop` vs. `docker kill`
+
+[Difference Between docker stop and docker kill Commands | Baeldung on Ops](https://www.baeldung.com/ops/docker-stop-vs-kill)
+
+#### `docker rm`
+
+Remove one or more containers.
+
+```
+# These commands run on the host
+
+# Before docker rm
+ubuntu@docker-host:~$ docker ps -a
+CONTAINER ID   IMAGE         COMMAND     CREATED             STATUS                        PORTS     NAMES
+5db5a74490d5   alpine        "/bin/sh"   37 minutes ago      Exited (137) 2 minutes ago              reverent_sutherland
+6c272c60442b   alpine        "/bin/sh"   About an hour ago   Exited (137) 21 minutes ago             crazy_faraday
+b0a454d2a766   hello-world   "/hello"    2 hours ago         Exited (0) 8 minutes ago                charming_blackwell
+
+ubuntu@docker-host:~$ docker rm 5db5a74490d5
+5db5a74490d5
+
+# After docker rm
+ubuntu@docker-host:~$ docker ps -a
+CONTAINER ID   IMAGE         COMMAND     CREATED             STATUS                        PORTS     NAMES
+6c272c60442b   alpine        "/bin/sh"   About an hour ago   Exited (137) 21 minutes ago             crazy_faraday
+b0a454d2a766   hello-world   "/hello"    2 hours ago         Exited (0) 8 minutes ago                charming_blackwell
+```
+
+### Docker Image Commands
+
+#### `docker image ls`
+
+List images.
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker images
+REPOSITORY                 TAG       IMAGE ID       CREATED         SIZE
+alpine                     latest    a606584aa9aa   3 days ago      7.8MB
+docker/welcome-to-docker   latest    c1f619b6477e   7 months ago    18.6MB
+hello-world                latest    d2c94e258dcb   13 months ago   13.3kB
+```
+
+> [!NOTE]  
+> `docker images` is an alias of `docker image ls`. 
+
+#### `docker image rm`
+
+Remove one or more images. Removes (and un-tags) one or more images from the host node. If an image has multiple tags, using this command with the tag as a parameter only removes the tag. If the tag is the only one for the image, both the image and the tag are removed.
+
+```
+# These commands run on the host
+
+ubuntu@docker-host:~$ docker ps -a
+CONTAINER ID   IMAGE         COMMAND     CREATED             STATUS                      PORTS     NAMES
+6c272c60442b   alpine        "/bin/sh"   About an hour ago   Up 7 minutes                          crazy_faraday
+b0a454d2a766   hello-world   "/hello"    2 hours ago         Exited (0) 17 minutes ago             charming_blackwell
+
+ubuntu@docker-host:~$ docker rm b0a454d2a766
+b0a454d2a766
+
+ubuntu@docker-host:~$ docker rmi hello-world
+Untagged: hello-world:latest
+Untagged: hello-world@sha256:94323f3e5e09a8b9515d74337010375a456c909543e1ff1538f5116d38ab3989
+Deleted: sha256:d2c94e258dcb3c5ac2798d32e1249e42ef01cba4841c2234249495f87264ac5a
+Deleted: sha256:ac28800ec8bb38d5c35b49d45a6ac4777544941199075dff8c4eb63e093aa81e
+```
+
+This does not remove images from a registry. You cannot remove an image of a running container unless you use the `-f` option. 
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker rmi alpine:latest
+Error response from daemon: conflict: unable to remove repository reference "alpine:latest" (must force) - container 6c272c60442b is using its referenced image a606584aa9aa
+```
+
+> [!NOTE]  
+> `docker rmi` is an alias of `docker image rm`. 
+
+#### `docker image prune`
+
+Remove all dangling images. If `-a` is specified, also remove all images not referenced by any container.
+
+```
+# These commands run on the host
+
+ubuntu@docker-host:~$ docker images
+REPOSITORY                 TAG       IMAGE ID       CREATED        SIZE
+alpine                     latest    a606584aa9aa   3 days ago     7.8MB
+docker/welcome-to-docker   latest    c1f619b6477e   7 months ago   18.6MB
+
+ubuntu@docker-host:~$ docker ps -a
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+
+ubuntu@docker-host:~$ docker image prune -a
+WARNING! This will remove all images without at least one container associated to them.
+Are you sure you want to continue? [y/N] y
+Deleted Images:
+untagged: alpine:latest
+untagged: alpine@sha256:b89d9c93e9ed3597455c90a0b88a8bbb5cb7188438f70953fede212a0c4394e0
+deleted: sha256:a606584aa9aa875552092ec9e1d62cb98d486f51f389609914039aabd9414687
+deleted: sha256:94e5f06ff8e3d4441dc3cd8b090ff38dc911bfa8ebdb0dc28395bc98f82f983f
+untagged: docker/welcome-to-docker:latest
+untagged: docker/welcome-to-docker@sha256:eedaff45e3c78538087bdd9dc7afafac7e110061bbdd836af4104b10f10ab693
+deleted: sha256:c1f619b6477e36a0b6a2531a972e918ef32bbf0217ee9b536409361261db6df0
+deleted: sha256:503c5cd6e10d87f52ccbcbe0fee9b033c6df11dee055c636caa64f65227d02cc
+deleted: sha256:12369c7fe5ffb31bc592a24c0cd081c85f34702da4b747ede00543e6f7f54a74
+deleted: sha256:2b3208f4feef2df0b1c11744e87d2a5c41a1ef41a1217f7d90f1e7c1dab2ee30
+deleted: sha256:97912e57274d7772d7f052fe2d671c5e0ac193863e9d5d02d2575949c17e1cd0
+deleted: sha256:8d49f96bd3dac9f64c8b46bda71c268caa7eafb1d9fde95b93a36133a1e805fc
+deleted: sha256:2765f389f779d9903825e36b704119da1da13faa4e73a44478fd86f577f4b738
+deleted: sha256:baeb76f1ff72a2a650534f62c17308491c058905a82289971c604dea72fe54ed
+deleted: sha256:cc2447e1835a40530975ab80bb1f872fbab0f2a0faecf2ab16fbbb89b3589438
+
+Total reclaimed space: 26.35MB
+```
 
 
 
@@ -297,8 +695,9 @@ Credit: [Docker Engine Architecture Under the Hood | by Yeldos Balgabekov | Medi
 
 Todo List:
 
-- [x] Describe Docker components
+- [x] Docker components
 - [x] Docker engine
-- [ ] Docker lifecycle commands
+- [x] Play with Docker - Docker CLI examples
+- [ ] Docker image
 - [ ] Docker networking
 - [ ] Docker storage
