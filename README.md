@@ -866,6 +866,8 @@ b
 
 ### OverlayFS
 
+[OverlayFS and Docker. This article is some kind of a next… | by Charles Vissol | DevOps.dev](https://blog.devops.dev/overlayfs-and-docker-3dca51c033c4)
+
 Excerpt from [Use the OverlayFS storage driver | Docker Docs](https://docs.docker.com/storage/storagedriver/overlayfs-driver/)
 
 > OverlayFS layers two directories on a single Linux host and presents them as a single directory. These directories are called layers, and the unification process is referred to as a union mount. OverlayFS refers to the lower directory as `lowerdir` and the upper directory a `upperdir`. The unified view is exposed through its own directory called `merged`.
@@ -1085,14 +1087,17 @@ REPOSITORY   TAG       IMAGE ID       CREATED         SIZE
 ubuntu-a     latest    01339e77b0ed   2 hours ago     78.1MB
 ubuntu       latest    35a88802559d   2 weeks ago     78.1MB
 
-ubuntu@docker-host:~$ docker tag 2f2eb372d6e7 hongsait/concepts-build-image-demo
+ubuntu@docker-host:~$ docker tag 2f2eb372d6e7 YOUR_DOCKER_HUB_USERNAME/concepts-build-image-demo
 
 ubuntu@docker-host:~$ docker images
 REPOSITORY                           TAG       IMAGE ID       CREATED         SIZE
-hongsait/concepts-build-image-demo   latest    2f2eb372d6e7   9 minutes ago   225MB
+YOUR_DOCKER_HUB_USERNAME/concepts-build-image-demo   latest    2f2eb372d6e7   9 minutes ago   225MB
 ubuntu-a                             latest    01339e77b0ed   2 hours ago     78.1MB
 ubuntu                               latest    35a88802559d   2 weeks ago     78.1MB
 ```
+> [!TIP]  
+> Replace **YOUR_DOCKER_HUB_USERNAME** with your actual Docker Hub username.
+
 
 #### Publishing images
 
@@ -1111,7 +1116,7 @@ ubuntu@docker-host:~$ docker login
 Log in with your Docker ID or email address to push and pull images from Docker Hub. If you don't have a Docker ID, head over to https://hub.docker.com/ to create one.
 You can log in with your password or a Personal Access Token (PAT). Using a limited-scope PAT grants better security and is required for organizations using SSO. Learn more at https://docs.docker.com/go/access-tokens/
 
-Username: hongsait
+Username: YOUR_DOCKER_HUB_USERNAME
 Password:
 WARNING! Your password will be stored unencrypted in /home/ubuntu/.docker/config.json.
 Configure a credential helper to remove this warning. See
@@ -1121,6 +1126,7 @@ Login Succeeded
 ```
 > [!NOTE]  
 > **Requiring authentication**
+>
 > Before you're able to push an image to a repository, you will need to be authenticated. To do so, simply use the docker login command.
 >
 > [Docker Hub quickstart](https://docs.docker.com/docker-hub/quickstart/)
@@ -1129,9 +1135,9 @@ Push the built and tagged container image to Docker Hub:
 
 ```
 # This command runs on the host
-ubuntu@docker-host:~$ docker push hongsait/concepts-build-image-demo
+ubuntu@docker-host:~$ docker push YOUR_DOCKER_HUB_USERNAME/concepts-build-image-demo
 Using default tag: latest
-The push refers to repository [docker.io/hongsait/concepts-build-image-demo]
+The push refers to repository [docker.io/YOUR_DOCKER_HUB_USERNAME/concepts-build-image-demo]
 7620d0166db7: Pushed
 00b4d41edb6b: Pushed
 1369af5ea085: Pushed
@@ -1160,9 +1166,9 @@ Pull the image from Docker Hub and run it.
 
 ```
 # This command runs on the host
-ubuntu@docker-host:~$ docker run -p 3000:3000/tcp hongsait/concepts-build-image-demo
-Unable to find image 'hongsait/concepts-build-image-demo:latest' locally
-latest: Pulling from hongsait/concepts-build-image-demo
+ubuntu@docker-host:~$ docker run -p 3000:3000/tcp YOUR_DOCKER_HUB_USERNAME/concepts-build-image-demo
+Unable to find image 'YOUR_DOCKER_HUB_USERNAME/concepts-build-image-demo:latest' locally
+latest: Pulling from YOUR_DOCKER_HUB_USERNAME/concepts-build-image-demo
 ec99f8b99825: Pull complete
 826542d541ab: Pull complete
 dffcc26d5732: Pull complete
@@ -1171,7 +1177,7 @@ db472a6f05b5: Pull complete
 d503d8a29caa: Pull complete
 e932524aceb1: Pull complete
 Digest: sha256:138d5adb8a4764e2eeb9c89952aa95b651cc837f9cc8d5bbfc9b1c986e8bef3f
-Status: Downloaded newer image for hongsait/concepts-build-image-demo:latest
+Status: Downloaded newer image for YOUR_DOCKER_HUB_USERNAME/concepts-build-image-demo:latest
 Using sqlite database at /etc/todos/todo.db
 Listening on port 3000
 ```
