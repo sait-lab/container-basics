@@ -370,17 +370,6 @@ PID   USER     TIME  COMMAND
     8 root      0:00 ps aux
 ```
 
-Create a new file under the root folder:
-
-```
-# This command runs inside the container
-/ # touch /a-new-file.txt
-/ # ls /
-a-new-file.txt  etc             media           proc            sbin            tmp
-bin             home            mnt             root            srv             usr
-dev             lib             opt             run             sys             var
-```
-
 On the host, run `docker container ls` to list containers:
 
 ```
