@@ -685,6 +685,228 @@ Total reclaimed space: 26.35MB
 
 
 
+## Docker Image
+
+[Understanding the image layers | Docker Docs](https://docs.docker.com/guides/docker-concepts/building-images/understanding-image-layers/)
+
+### Using `docker image commit` to create an image
+
+Start a new Ubuntu container:
+
+```
+# This command runs on the host
+docker run --name=base-container -it ubuntu
+```
+
+You will see output like the following:
+
+```
+Unable to find image 'ubuntu:latest' locally
+latest: Pulling from library/ubuntu
+9c704ecd0c69: Pull complete
+Digest: sha256:2e863c44b718727c860746568e1d54afd13b2fa71b160f5cd9058fc436217b30
+Status: Downloaded newer image for ubuntu:latest
+root@64cda439432b:/#
+```
+
+Create a `/a.txt` file inside the container:
+
+```
+# This command runs inside the container
+root@64cda439432b:/# echo 'a' > /a.txt
+root@64cda439432b:/# cat /a.txt
+a
+```
+
+Open a new SSH session to log into the host. Use `docker container commit` command to save the changes you’ve made as a new image layer, from which you can start new containers or build new images.
+
+```
+# This command runs on the host
+docker container commit -m "Add a.txt" base-container ubuntu-a 
+```
+
+[docker container commit | Docker Docs](https://docs.docker.com/reference/cli/docker/container/commit/)
+
+> [!NOTE]  
+> `docker commit` is an alias of `docker container commit`. 
+
+Run `docker images` to verify that the new ubuntu-a image has been created:
+
+```
+# This command runs on the host
+docker images
+REPOSITORY   TAG       IMAGE ID       CREATED         SIZE
+ubuntu-a     latest    01339e77b0ed   3 seconds ago   78.1MB
+ubuntu       latest    35a88802559d   2 weeks ago     78.1MB
+```
+
+View the layers of your image using the `docker image history` command:
+
+```
+# This command runs on the host
+docker image history ubuntu-a
+IMAGE          CREATED         CREATED BY                                      SIZE      COMMENT
+01339e77b0ed   2 minutes ago   /bin/bash                                       2B        Add a.txt
+35a88802559d   2 weeks ago     /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B
+<missing>      2 weeks ago     /bin/sh -c #(nop) ADD file:5601f441718b0d192…   78.1MB
+<missing>      2 weeks ago     /bin/sh -c #(nop)  LABEL org.opencontainers.…   0B
+<missing>      2 weeks ago     /bin/sh -c #(nop)  LABEL org.opencontainers.…   0B
+<missing>      2 weeks ago     /bin/sh -c #(nop)  ARG LAUNCHPAD_BUILD_ARCH     0B
+<missing>      2 weeks ago     /bin/sh -c #(nop)  ARG RELEASE                  0B
+```
+
+The top line `01339e77b0ed   2 minutes ago   /bin/bash   2B ` indicates the new file has been added to the image.
+
+Run `docker image inspect` to display detailed information on one or more images.
+
+```
+# These commands run on the host
+
+ubuntu@docker-host:~$ docker image inspect --format='{{json .RootFS}}' ubuntu-a | jq
+{
+  "Type": "layers",
+  "Layers": [
+    "sha256:a30a5965a4f7d9d5ff76a46eb8939f58e95be844de1ac4a4b452d5d31158fdea",
+    "sha256:36e04ef6d51b6da610c536d339c852b0d658bdc336875354d161060f5d451e6c"
+  ]
+}
+
+ubuntu@docker-host:~$ docker image inspect --format='{{json .RootFS}}' ubuntu | jq
+{
+  "Type": "layers",
+  "Layers": [
+    "sha256:a30a5965a4f7d9d5ff76a46eb8939f58e95be844de1ac4a4b452d5d31158fdea"
+  ]
+}
+```
+> [!TIP]  
+> `jq`, a command-line JSON processing tool, is a good solution for dealing with machine-readable data formats and is especially useful in shell scripts. 
+> https://jqlang.github.io/jq/
+> https://www.digitalocean.com/community/tutorials/how-to-transform-json-data-with-jq
+
+To prove your new image has the `/a.txt` file, you can start a new container using this new image:
+
+```
+# This command runs on the host
+docker run ubuntu-a cat /a.txt
+a
+```
+> [!NOTE]  
+> A base image is a foundation for building other images. It's possible to use any images as a base image. However, some images are intentionally created as building blocks, providing a foundation or starting point for an application.
+
+### Modify `UppderDir`
+
+Run `docker image inspect` to display the `upper` directory that contains the contents of the container's read-write layer:
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker image inspect --format='{{json .GraphDriver}}' ubuntu-a | jq
+{
+  "Data": {
+    "LowerDir": "/var/lib/docker/overlay2/de66dfd62099295d42d6068fc48ad6eb88984b90a30da22d17574fb030885f39/diff",
+    "MergedDir": "/var/lib/docker/overlay2/022cf4819e93069dced25d93a620e7e78ae8188134782f1b2c13fa16fdecfaef/merged",
+    "UpperDir": "/var/lib/docker/overlay2/022cf4819e93069dced25d93a620e7e78ae8188134782f1b2c13fa16fdecfaef/diff",
+    "WorkDir": "/var/lib/docker/overlay2/022cf4819e93069dced25d93a620e7e78ae8188134782f1b2c13fa16fdecfaef/work"
+  },
+  "Name": "overlay2"
+}
+```
+
+Modify the `a.txt` file on the host:
+
+```
+# These commands run on the host
+
+ubuntu@docker-host:~$ sudo cat /var/lib/docker/overlay2/022cf4819e93069dced25d93a620e7e78ae8188134782f1b2c13fa16fdecfaef/diff/a.txt
+a
+
+# Add a new line 'b' to a.txt file
+ubuntu@docker-host:~$ echo 'b' | sudo tee -a /var/lib/docker/overlay2/022cf4819e93069dced25d93a620e7e78ae8188134782f1b2c13fa16fdecfaef/diff/a.txt
+```
+
+Start a new container from image `ubuntu-a` and display the content of `/a.txt` file:
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker run ubuntu-a cat /a.txt
+a
+b
+```
+
+Start a new container from image `ubuntu-a`  and open the shell.
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker run -it ubuntu-a
+root@aa06e9ee4348:/#
+```
+
+Modify the `/a.txt` file inside the container.
+
+```
+# These commands run inside the container
+root@aa06e9ee4348:/# cat /a.txt
+a
+b
+root@aa06e9ee4348:/# echo 'c' >> /a.txt
+root@aa06e9ee4348:/# cat /a.txt
+a
+b
+c
+```
+
+Don't exit the container. Verify the content of `a.txt` on the host.
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ sudo cat /var/lib/docker/overlay2/022cf4819e93069dced25d93a620e7e78ae8188134782f1b2c13fa16fdecfaef/diff/a.txt
+a
+b
+```
+
+### OverlayFS
+
+Excerpt from [Use the OverlayFS storage driver | Docker Docs](https://docs.docker.com/storage/storagedriver/overlayfs-driver/)
+
+> OverlayFS layers two directories on a single Linux host and presents them as a single directory. These directories are called layers, and the unification process is referred to as a union mount. OverlayFS refers to the lower directory as `lowerdir` and the upper directory a `upperdir`. The unified view is exposed through its own directory called `merged`.
+>
+> The `overlay2` driver natively supports up to 128 lower OverlayFS layers. This capability provides better performance for layer-related Docker commands such as `docker build` and `docker commit`, and consumes fewer inodes on the backing filesystem.
+>
+> The following diagram shows how a Docker image and a Docker container are layered. The image layer is the `lowerdir` and the container layer is the `upperdir`. If the image has multiple layers, multiple `lowerdir` directories are used. The unified view is exposed through a directory called `merged` which is effectively the containers mount point.
+>
+> ![overlay_constructs](./README.assets/overlay_constructs.webp)
+>
+> Where the image layer and the container layer contain the same files, the container layer (`upperdir`) takes precedence and obscures the existence of the same files in the image layer.
+>
+> To create a container, the `overlay2` driver combines the directory representing the image's top layer plus a new directory for the container. The image's layers are the `lowerdirs` in the overlay and are read-only. The new directory for the container is the `upperdir` and is writable.
+
+OverlayFS is an implementation of [Union File System](https://en.wikipedia.org/wiki/UnionFS). It stacks multiple Directory/Files to construct one directory tree.
+
+Container read scenarios:
+
+1. If a container opens a file for read access and the file does not already exist in the container (`upperdir`) it is read from the image (`lowerdir`).
+2. If a container opens a file for read access and the file exists in the container (`upperdir`) and not in the image (`lowerdir`), it's read directly from the container.
+3. If a container opens a file for read access and the file exists in the image layer and the container layer, the file's version in the container layer is read. Files in the container layer (`upperdir`) obscure files with the same name in the image layer (`lowerdir`).
+
+<img src="./README.assets/overlayfs-reads.jpg" alt="overlayfs-reads" style="zoom: 33%;" /> 
+
+Container write scenarios:
+
+1. The first time a container writes to an existing file, that file does not exist in the container (`upperdir`). The `overlay2` driver performs a `copy_up` operation to copy the file from the image (`lowerdir`) to the container (`upperdir`). The container then writes the changes to the new copy of the file in the container layer.
+   <img src="./README.assets/overlayfs-writes-1.jpg" alt="overlayfs-writes-1" style="zoom:33%;" />  
+
+2. Deleting files and directories
+
+   - When a *file* is deleted within a container, a *whiteout* file is created in the container (`upperdir`). The version of the file in the image layer (`lowerdir`) is not deleted (because the `lowerdir` is read-only). However, the whiteout file prevents it from being available to the container.
+   - When a *directory* is deleted within a container, an *opaque directory* is created within the container (`upperdir`). This works in the same way as a whiteout file and effectively prevents the directory from being accessed, even though it still exists in the image (`lowerdir`).
+
+   <img src="./README.assets/overlayfs-writes-2.jpg" alt="overlayfs-writes-2" style="zoom:33%;" /> 
+
+3. Calling `rename(2)` for a directory is allowed only when both the source and the destination path are on the top layer.
+
+### Using Dockerfile to create an image
+
+ 
 
 
 
@@ -693,9 +915,11 @@ Total reclaimed space: 26.35MB
 
 Todo List:
 
-- [x] Docker components
+- [x] Docker concepts
 - [x] Docker engine
 - [x] Play with Docker - Docker CLI examples
-- [ ] Docker image
+- [x] OverlayFS
+- [ ] Building Docker image
 - [ ] Docker networking
 - [ ] Docker storage
+- [ ] TOC
