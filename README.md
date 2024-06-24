@@ -904,9 +904,309 @@ Container write scenarios:
 
 3. Calling `rename(2)` for a directory is allowed only when both the source and the destination path are on the top layer.
 
-### Using Dockerfile to create an image
+### Writing a Dockerfile
 
- 
+Excerpt from [Writing a Dockerfile | Docker Docs](https://docs.docker.com/guides/docker-concepts/building-images/writing-a-dockerfile/)
+
+> A Dockerfile is a text-based document that's used to create a container image. It provides instructions to the image builder on the commands to run, files to copy, startup command, and more.
+>
+> A Dockerfile typically follows these steps:
+>
+> 1. Determine your base image
+> 2. Install application dependencies
+> 3. Copy in any relevant source code and/or binaries
+> 4. Configure the final image
+
+Follow the instructions https://docs.docker.com/guides/docker-concepts/building-images/writing-a-dockerfile/#try-it-out to create a container image using Dockerfile.
+
+1. [Download this ZIP file](https://github.com/docker/getting-started-todo-app/raw/build-image-from-scratch/app.zip) and extract the contents into a directory on your machine.
+
+   ```
+   # These commands run on the host
+   
+   ubuntu@docker-host:~$ cd ~ && wget https://github.com/docker/getting-started-todo-app/raw/build-image-from-scratch/app.zip
+   ......
+   
+   ubuntu@docker-host:~$ sudo apt install unzip
+   ......
+   
+   ubuntu@docker-host:~$ unzip app.zip
+   ......
+   ```
+
+2. Show the content of Dockerfile:
+   ```
+   # This command runs on the host
+   ubuntu@docker-host:~$ cat ./app/Dockerfile
+   ```
+
+   ```
+   FROM node:20-alpine
+   WORKDIR /app
+   COPY . .
+   RUN yarn install --production
+   CMD ["node", "src/index.js"]
+   ```
+
+3. Dockerfile breakdown:
+
+   - Define your base image by adding the following line:
+     ```
+     FROM node:20-alpine
+     ```
+
+   - Define the working directory by using the `WORKDIR` instruction. This will specify where future commands will run and the directory files will be copied inside the container image.
+     ```
+     WORKDIR /usr/local/app
+     ```
+
+   - Copy all of the files from your project on your machine into the container image by using the `COPY` instruction:
+     ```
+     COPY . .
+     ```
+
+   - Install the app's dependencies by using the `yarn` CLI and package manager. To do so, run a command using the `RUN` instruction:
+     ```
+     RUN yarn install --production
+     ```
+
+   - Finally, specify the default command to run by using the `CMD` instruction:
+     ```
+     CMD ["node", "./src/index.js"]
+     ```
+
+### Build, tag, and publish an image
+
+Excerpt from [Build, tag, and publish an image | Docker Docs](https://docs.docker.com/guides/docker-concepts/building-images/build-tag-and-publish-an-image/)
+
+> - Building images - the process of building an image based on a `Dockerfile`
+> - Tagging images - the process of giving an image a name, which also determines where the image can be distributed
+> - Publishing images - the process to distribute or share the newly created image using a container registry
+
+#### Building images
+
+The most basic `docker build` command might look like the following:
+
+```bash
+# These commands run on the host
+ubuntu@docker-host:~$ cd ~/app
+ubuntu@docker-host:~/app$ docker build .
+```
+
+The final `.` in the command provides the path or URL to the [build context](https://docs.docker.com/build/building/context/#what-is-a-build-context). At this location, the builder will find the `Dockerfile` and other referenced files.
+
+When you run a build, the builder pulls the base image, if needed, and then runs the instructions specified in the Dockerfile.
+
+With the previous command, the image will have no name, but the output will provide the ID of the image. As an example, the previous command might produce the following output:
+
+```
+[+] Building 18.9s (9/9) FINISHED                                                                                                           docker:default
+ => [internal] load build definition from Dockerfile                                                                                                  0.0s
+ => => transferring dockerfile: 138B                                                                                                                  0.0s
+ => [internal] load metadata for docker.io/library/node:20-alpine                                                                                     1.1s
+ => [internal] load .dockerignore                                                                                                                     0.0s
+ => => transferring context: 2B                                                                                                                       0.0s
+ => [1/4] FROM docker.io/library/node:20-alpine@sha256:804aa6a6476a7e2a5df8db28804aa6c1c97904eefb01deed5d6af24bb51d0c81                               3.0s
+ => => resolve docker.io/library/node:20-alpine@sha256:804aa6a6476a7e2a5df8db28804aa6c1c97904eefb01deed5d6af24bb51d0c81                               0.0s
+ => => sha256:804aa6a6476a7e2a5df8db28804aa6c1c97904eefb01deed5d6af24bb51d0c81 7.67kB / 7.67kB                                                        0.0s
+ => => sha256:082567d367e7816c7c9ddea38b0258ffbd812e3b6cc2eb84fcab748a13a76f4d 1.72kB / 1.72kB                                                        0.0s
+ => => sha256:7d574aa246b25137d960aef810914b4f7441a8a1704b9fa23dce4e559e1e9574 6.36kB / 6.36kB                                                        0.0s
+ => => sha256:ec99f8b99825a742d50fb3ce173d291378a46ab54b8ef7dd75e5654e2a296e99 3.62MB / 3.62MB                                                        0.3s
+ => => sha256:826542d541ab88dafafd1e8c6ccccf1e870336f6d48d1feff10c4720d0bebe58 42.18MB / 42.18MB                                                      1.1s
+ => => sha256:dffcc26d5732092ab309ca3f1a2d775be8eff526ef6154005da170f2d7f81108 1.39MB / 1.39MB                                                        0.4s
+ => => extracting sha256:ec99f8b99825a742d50fb3ce173d291378a46ab54b8ef7dd75e5654e2a296e99                                                             0.1s
+ => => sha256:db472a6f05b5e1bbd31ff3a00655998a08dfa5530073d19969a4be0690e70cc2 452B / 452B                                                            0.4s
+ => => extracting sha256:826542d541ab88dafafd1e8c6ccccf1e870336f6d48d1feff10c4720d0bebe58                                                             1.7s
+ => => extracting sha256:dffcc26d5732092ab309ca3f1a2d775be8eff526ef6154005da170f2d7f81108                                                             0.1s
+ => => extracting sha256:db472a6f05b5e1bbd31ff3a00655998a08dfa5530073d19969a4be0690e70cc2                                                             0.0s
+ => [internal] load build context                                                                                                                     0.1s
+ => => transferring context: 4.59MB                                                                                                                   0.1s
+ => [2/4] WORKDIR /app                                                                                                                                0.2s
+ => [3/4] COPY . .                                                                                                                                    0.0s
+ => [4/4] RUN yarn install --production                                                                                                              12.8s
+ => exporting to image                                                                                                                                1.6s
+ => => exporting layers                                                                                                                               1.6s
+ => => writing image sha256:2f2eb372d6e733cf03de24b8983713dee0cdf28d01108c152572b42665d72ebf                                                          0.0s
+```
+
+With the previous output, you could start a container by using the referenced image:
+
+```console
+# This command runs on the host
+ubuntu@docker-host:~/app$ docker run sha256:2f2eb372d6e733cf03de24b8983713dee0cdf28d01108c152572b42665d72ebf
+```
+
+The `docker run` command produces the following output:
+
+```
+Using sqlite database at /etc/todos/todo.db
+Listening on port 3000
+```
+> [!TIP]  
+> Use `CTRL+C` to stop the container.
+
+#### Tagging images
+
+That container image hash certainly isn't memorable, which is where tagging becomes useful.
+
+Excerpt from https://docs.docker.com/guides/docker-concepts/building-images/build-tag-and-publish-an-image/#tagging-images
+
+> Tagging images is the method to provide an image with a memorable name. However, there is a structure to the name of an image. A full image name has the following structure:
+> ```text
+> [HOST[:PORT_NUMBER]/]PATH[:TAG]
+> ```
+> - `HOST`: The optional registry hostname where the image is located. If no host is specified, Docker's public registry at `docker.io` is used by default.
+> - `PORT_NUMBER`: The registry port number if a hostname is provided
+> - `PATH`: The path of the image, consisting of slash-separated components. For Docker Hub, the format follows `[NAMESPACE/]REPOSITORY`, where namespace is either a user's or organization's name. If no namespace is specified, `library` is used, which is the namespace for Docker Official Images.
+> - `TAG`: A custom, human-readable identifier that's typically used to identify different versions or variants of an image. If no tag is specified, `latest` is used by default.
+
+To tag an image during a build, add the `-t` or `--tag` flag:
+
+```console
+# This command runs on the host
+docker build -t my-username/my-image .
+```
+
+If you've already built an image, you can add another tag to the image by using the [`docker image tag`](https://docs.docker.com/engine/reference/commandline/image_tag/) command:
+
+```console
+# This command runs on the host
+docker image tag my-username/my-image another-username/another-image:v1
+```
+
+Tag the previous created image using `docker tag IMAGE_HASH YOUR_DOCKERHUB_USERNAME/concepts-build-image-demo`:
+
+```
+# These commands run on the host
+
+ubuntu@docker-host:~$ docker images
+REPOSITORY   TAG       IMAGE ID       CREATED         SIZE
+<none>       <none>    2f2eb372d6e7   8 minutes ago   225MB
+ubuntu-a     latest    01339e77b0ed   2 hours ago     78.1MB
+ubuntu       latest    35a88802559d   2 weeks ago     78.1MB
+
+ubuntu@docker-host:~$ docker tag 2f2eb372d6e7 hongsait/concepts-build-image-demo
+
+ubuntu@docker-host:~$ docker images
+REPOSITORY                           TAG       IMAGE ID       CREATED         SIZE
+hongsait/concepts-build-image-demo   latest    2f2eb372d6e7   9 minutes ago   225MB
+ubuntu-a                             latest    01339e77b0ed   2 hours ago     78.1MB
+ubuntu                               latest    35a88802559d   2 weeks ago     78.1MB
+```
+
+#### Publishing images
+
+Once you have an image built and tagged, you're ready to push it to a registry. To do so, use the [`docker push`](https://docs.docker.com/engine/reference/commandline/image_push/) command:
+
+```console
+docker push YOUR_DOCKERHUB_USERNAME/IMAGE_TAG
+```
+
+Use `docker login` to log in to Docker Hub registry:
+
+```
+# This command runs on the host
+
+ubuntu@docker-host:~$ docker login
+Log in with your Docker ID or email address to push and pull images from Docker Hub. If you don't have a Docker ID, head over to https://hub.docker.com/ to create one.
+You can log in with your password or a Personal Access Token (PAT). Using a limited-scope PAT grants better security and is required for organizations using SSO. Learn more at https://docs.docker.com/go/access-tokens/
+
+Username: hongsait
+Password:
+WARNING! Your password will be stored unencrypted in /home/ubuntu/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+Login Succeeded
+```
+> [!NOTE]  
+> **Requiring authentication**
+> Before you're able to push an image to a repository, you will need to be authenticated. To do so, simply use the docker login command.
+>
+> [Docker Hub quickstart](https://docs.docker.com/docker-hub/quickstart/)
+
+Push the built and tagged container image to Docker Hub:
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker push hongsait/concepts-build-image-demo
+Using default tag: latest
+The push refers to repository [docker.io/hongsait/concepts-build-image-demo]
+7620d0166db7: Pushed
+00b4d41edb6b: Pushed
+1369af5ea085: Pushed
+ea3a39385d46: Mounted from library/node
+ac51c88d51fe: Mounted from library/node
+ba9916be9d18: Mounted from library/node
+94e5f06ff8e3: Mounted from library/node
+latest: digest: sha256:138d5adb8a4764e2eeb9c89952aa95b651cc837f9cc8d5bbfc9b1c986e8bef3f size: 1787
+```
+
+Log in to https://hub.docker.com/, verify that the image has been pushed.
+
+![docker-hub-verify](./README.assets/docker-hub-verify.jpg) 
+
+On the host, stop all running containers, remove all containers, remove all volumes and remove all container images:
+
+```
+# These commands run on the host
+ubuntu@docker-host:~$ docker stop $(docker ps -aq) && docker rm $(docker ps -aq)
+......
+ubuntu@docker-host:~$ docker system prune --all --volumes --force
+......
+```
+
+Pull the image from Docker Hub and run it.
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ docker run -p 3000:3000/tcp hongsait/concepts-build-image-demo
+Unable to find image 'hongsait/concepts-build-image-demo:latest' locally
+latest: Pulling from hongsait/concepts-build-image-demo
+ec99f8b99825: Pull complete
+826542d541ab: Pull complete
+dffcc26d5732: Pull complete
+db472a6f05b5: Pull complete
+031eb239ad87: Pull complete
+d503d8a29caa: Pull complete
+e932524aceb1: Pull complete
+Digest: sha256:138d5adb8a4764e2eeb9c89952aa95b651cc837f9cc8d5bbfc9b1c986e8bef3f
+Status: Downloaded newer image for hongsait/concepts-build-image-demo:latest
+Using sqlite database at /etc/todos/todo.db
+Listening on port 3000
+```
+
+Don't exit the running container. Open a new SSH session to log into the host. Use `curl` to verify that the container is running correctly.
+
+```
+# This command runs on the host
+ubuntu@docker-host:~$ curl http://127.0.0.1:3000
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1.0, user-scalable=0" />
+    <link rel="stylesheet" href="css/bootstrap.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="css/font-awesome/all.min.css" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css?family=Lato&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <title>Todo App</title>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="js/react.production.min.js"></script>
+    <script src="js/react-dom.production.min.js"></script>
+    <script src="js/react-bootstrap.js"></script>
+    <script src="js/babel.min.js"></script>
+    <script type="text/babel" src="js/app.js"></script>
+</body>
+</html>
+```
+
+
+
+
 
 
 
@@ -919,7 +1219,7 @@ Todo List:
 - [x] Docker engine
 - [x] Play with Docker - Docker CLI examples
 - [x] OverlayFS
-- [ ] Building Docker image
+- [x] Building Docker image
 - [ ] Docker networking
 - [ ] Docker storage
 - [ ] TOC
