@@ -18,6 +18,13 @@ https://labs.play-with-docker.com/ is a free 4-hour Docker playground which allo
   https://docs.docker.com/engine/install/ubuntu/ <br>
   https://docs.docker.com/engine/install/linux-postinstall/
 </details>
+
+<details>
+  <summary>Install Docker Engine on RHEL</summary>
+  https://docs.docker.com/engine/install/rhel/ <br>
+  https://docs.docker.com/engine/install/linux-postinstall/
+</details>
+
 Installing Docker Engine directly on Linux is often better for learners compared to using Docker Desktop for a few reasons:
 
 1. **Simplicity**: Linux simplifies Docker installation and usage because Docker was originally designed for Linux. Learners can avoid the complexities and potential issues associated with running Docker through a virtualization layer.
@@ -685,7 +692,7 @@ Total reclaimed space: 26.35MB
 
 
 
-## Docker Image
+## Building Images
 
 [Understanding the image layers | Docker Docs](https://docs.docker.com/guides/docker-concepts/building-images/understanding-image-layers/)
 
@@ -929,7 +936,7 @@ Follow the instructions https://docs.docker.com/guides/docker-concepts/building-
    ubuntu@docker-host:~$ cd ~ && wget https://github.com/docker/getting-started-todo-app/raw/build-image-from-scratch/app.zip
    ......
    
-   ubuntu@docker-host:~$ sudo apt install unzip
+   ubuntu@docker-host:~$ sudo apt install unzip -y
    ......
    
    ubuntu@docker-host:~$ unzip app.zip
@@ -1214,8 +1221,106 @@ ubuntu@docker-host:~$ curl http://127.0.0.1:3000
 </html>
 ```
 
+## Running Containers
 
+### Publishing Ports
 
+Excerpt from [Publishing and exposing ports | Docker Docs](https://docs.docker.com/guides/docker-concepts/running-containers/publishing-ports/)
+
+> If you've been following the guides so far, you understand that containers provide isolated processes for each component of your application. Each component - a React frontend, a Python API, and a Postgres database - runs in its own sandbox environment, completely isolated from everything else on your host machine. This isolation is great for security and managing dependencies, but it also means you can’t access them directly. For example, you **can’t access the web app in your browser**.
+>
+> Publishing a port provides the ability to break through a little bit of networking isolation by setting up a forwarding rule. As an example, you can indicate that requests on your host’s port `8080` should be forwarded to the container’s port `80`. Publishing ports happens during container creation using the `-p` (or `--publish`) flag with `docker run`. The syntax is:
+>
+> ```console
+> $ docker run -d -p HOST_PORT:CONTAINER_PORT nginx
+> ```
+>
+> - `HOST_PORT`: The port number on your host machine where you want to receive traffic
+> - `CONTAINER_PORT`: The port number within the container that's listening for connections
+>
+> For example, to publish the container's port `80` to host port `8080`:
+>
+> ```console
+> $ docker run -d -p 8080:80 nginx
+> ```
+>
+> Now, any traffic sent to port `8080` on your host machine will be forwarded to port `80` within the container.
+
+### Persisting Container Data
+
+Excerpt from [Persisting container data | Docker Docs](https://docs.docker.com/guides/docker-concepts/running-containers/persisting-container-data/)
+
+> When a container starts, it uses the files and configuration provided by the image. Each container is able to create, modify, and delete files and does so without affecting any other containers. When the container is deleted, these file changes are also deleted.
+>
+> While this ephemeral nature of containers is great, it poses a challenge when you want to persist the data.
+
+#### Container volumes
+
+Volumes are a storage mechanism that provide the ability to persist data beyond the lifecycle of an individual container. Think of it like providing a shortcut or symlink from inside the container to outside the container.
+
+As an example, imagine you create a volume named `log-data`.
+
+```console
+# This command runs on the host
+$ docker volume create log-data
+```
+
+When starting a container with the following command, the volume will be mounted (or attached) into the container at `/logs`:
+
+```console
+# This command runs on the host
+$ docker run -d -p 80:80 -v log-data:/logs docker/welcome-to-docker
+```
+
+If the volume `log-data` doesn't exist, Docker will automatically create it for you.
+
+When the container runs, all files it writes into the `/logs` folder will be saved in this volume, outside of the container. If you delete the container and start a new container using the same volume, the files will still be there.
+
+Create `/logs/logfile` inside the container:
+
+```
+# These commands run on the host
+
+ubuntu@docker-host:~$ docker ps
+CONTAINER ID   IMAGE                                COMMAND                  CREATED          STATUS          PORTS                    NAMES
+8ef3440f7265   docker/welcome-to-docker             "/docker-entrypoint.…"   3 seconds ago    Up 3 seconds    0.0.0.0:80->80/tcp       kind_dewdney
+394f5801a52e   hongsait/concepts-build-image-demo   "docker-entrypoint.s…"   31 minutes ago   Up 31 minutes   0.0.0.0:3000->3000/tcp   great_payne
+
+ubuntu@docker-host:~$ docker exec -it 8ef3440f7265 touch /logs/logfile
+
+ubuntu@docker-host:~$ docker exec -it 8ef3440f7265 ls /logs
+logfile
+```
+
+Stop the container, create a new container, and attach the volume. Verify that the `logfile` has been persisted in the volume.
+
+```
+# These commands run on the host
+
+ubuntu@docker-host:~$ docker stop 8ef3440f7265
+8ef3440f7265
+
+ubuntu@docker-host:~$ docker run -d -p 80:80 -v log-data:/logs docker/welcome-to-docker
+9b1766c4084f7f1221ac92784b5afab16acc021cca6396c03df85b19a9352ea9
+
+ubuntu@docker-host:~$ docker exec -it 9b1766c4084f ls /logs
+logfile
+```
+
+> [!TIP]
+> **Sharing files using volumes**
+>
+> You can attach the same volume to multiple containers to share files between containers. This might be helpful in scenarios such as log aggregation, data pipelines, or other event-driven applications.
+
+#### Managing volumes
+
+Volumes have their own lifecycle beyond that of containers and can grow quite large depending on the type of data and applications you’re using. The following commands will be helpful to manage volumes:
+
+- `docker volume ls` - list all volumes
+- `docker volume rm <volume-name-or-id>` - remove a volume (only works when the volume is not attached to any containers)
+- `docker volume prune` - remove all unused (unattached) volumes
+
+#### Sharing local files with containers
 
 
 
@@ -1230,6 +1335,6 @@ Todo List:
 - [x] Play with Docker - Docker CLI examples
 - [x] OverlayFS
 - [x] Building Docker image
-- [ ] Docker networking
-- [ ] Docker storage
+- [x] Docker networking
+- [x] Docker storage
 - [ ] TOC
