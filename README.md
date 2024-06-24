@@ -1317,12 +1317,107 @@ logfile
 Volumes have their own lifecycle beyond that of containers and can grow quite large depending on the type of data and applications you’re using. The following commands will be helpful to manage volumes:
 
 - `docker volume ls` - list all volumes
+
+  ```
+  # This command runs on the host
+  ubuntu@docker-host:~$ docker volume ls
+  DRIVER    VOLUME NAME
+  local     log-data
+  ```
 - `docker volume rm <volume-name-or-id>` - remove a volume (only works when the volume is not attached to any containers)
 - `docker volume prune` - remove all unused (unattached) volumes
 
-#### Sharing local files with containers
+### Sharing local files with containers
 
+Excerpt from [Sharing local files with containers | Docker Docs](https://docs.docker.com/guides/docker-concepts/running-containers/sharing-local-files/)
 
+> Each container has everything it needs to function with no reliance on any pre-installed dependencies on the host machine. Since containers run in isolation, they have minimal influence on the host and other containers. This isolation has a major benefit: containers minimize conflicts with the host system and other containers. However, this isolation also means containers can't directly access data on the host machine by default.
+>
+> Consider a scenario where you have a web application container that requires access to configuration settings stored in a file on your host system. This file may contain sensitive data such as database credentials or API keys. Storing such sensitive information directly within the container image poses security risks, especially during image sharing. To address this challenge, Docker offers storage options that bridge the gap between container isolation and your host machine's data.
+>
+> Docker offers two primary storage options for persisting data and sharing files between the host machine and containers: volumes and bind mounts.
+
+#### Volume versus bind mounts
+
+If you want to ensure that data generated or modified inside the container persists even after the container stops running, you would opt for a volume.
+
+If you have specific files or directories on your host system that you want to directly share with your container, like configuration files or development code, then you would use a bind mount. It's like opening a direct portal between your host and container for sharing. Bind mounts are ideal for development environments where real-time file access and sharing between the host and container are crucial.
+
+#### Sharing files between a host and container
+
+Both `-v` (or `--volume`) and `--mount` flags used with the `docker run` command let you share files or directories between your local machine (host) and a Docker container. However, there are some key differences in their behavior and usage.
+
+The `-v` flag is simpler and more convenient for basic volume or bind mount operations. If the host location doesn’t exist when using `-v` or `--volume`, a directory will be automatically created.
+
+Here's a way to use `docker run` to start a container using a bind mount and map it to the container file location.
+
+```console
+$ docker run -v /HOST/PATH:/CONTAINER/PATH -it nginx
+```
+
+Create an `index.html` and bind mount it to an nginx container:
+
+```
+# These commands run on the host
+ubuntu@docker-host:~$ mkdir -p ~/nginx-html && echo 'Peter Parker was here' > ~/nginx-html/index.html
+
+ubuntu@docker-host:~$ docker run -v ~/nginx-html/index.html:/usr/share/nginx/html/index.html -p 80:80 nginx
+/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+/docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2024/06/24 17:30:17 [notice] 1#1: using the "epoll" event method
+2024/06/24 17:30:17 [notice] 1#1: nginx/1.27.0
+2024/06/24 17:30:17 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14)
+2024/06/24 17:30:17 [notice] 1#1: OS: Linux 6.8.0-35-generic
+2024/06/24 17:30:17 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2024/06/24 17:30:17 [notice] 1#1: start worker processes
+2024/06/24 17:30:17 [notice] 1#1: start worker process 29
+2024/06/24 17:30:17 [notice] 1#1: start worker process 30
+2024/06/24 17:30:17 [notice] 1#1: start worker process 31
+2024/06/24 17:30:17 [notice] 1#1: start worker process 32
+```
+
+Don't exit the running nginx container. Verify the bind mount in a different SSH session on the host.
+
+```
+# These commands run on the host
+
+ubuntu@docker-host:~$ docker ps
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                NAMES
+762a80f8a5c5   nginx     "/docker-entrypoint.…"   25 seconds ago   Up 25 seconds   0.0.0.0:80->80/tcp   hardcore_brahmagupta
+
+ubuntu@docker-host:~$ docker exec 762a80f8a5c5 cat /usr/share/nginx/html/index.html
+Peter Parker was here
+
+ubuntu@docker-host:~$ curl 127.0.0.1:80
+Peter Parker was here
+```
+
+Modify the `index.html` on the host, don't restart or stop the nginx container. Verify the nginx container has real-time file access to the modified file.
+
+```
+# These commands run on the host
+ubuntu@docker-host:~$ echo 'Iron man was here too' >> ~/nginx-html/index.html
+ubuntu@docker-host:~$ curl 127.0.0.1:80
+Peter Parker was here
+Iron man was here too
+```
+
+#### File permissions for Docker access to host files
+
+When using bind mounts, it's crucial to ensure that Docker has the necessary permissions to access the host directory. To grant read/write access, you can use the `:ro` flag (read-only) or `:rw` (read-write) with the `-v` or `--mount` flag during container creation. For example, the following command grants read-write access permission.
+
+```console
+$ docker run -v HOST-DIRECTORY:/CONTAINER-DIRECTORY:rw nginx
+```
+
+Read-only bind mounts let the container access the mounted files on the host for reading, but it can't change or delete the files. With read-write bind mounts, containers can modify or delete mounted files, and these changes or deletions will also be reflected on the host system. Read-only bind mounts ensures that files on the host can't be accidentally modified or deleted by a container.
 
 
 
@@ -1330,11 +1425,4 @@ Volumes have their own lifecycle beyond that of containers and can grow quite la
 
 Todo List:
 
-- [x] Docker concepts
-- [x] Docker engine
-- [x] Play with Docker - Docker CLI examples
-- [x] OverlayFS
-- [x] Building Docker image
-- [x] Docker networking
-- [x] Docker storage
-- [ ] TOC
+- [ ] Docker compose
