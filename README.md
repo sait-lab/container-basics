@@ -543,6 +543,9 @@ ubuntu@docker-host:~$ docker stop 5db5a74490d5
 5db5a74490d5
 ```
 
+> [!NOTE]  
+> `docker stop` is an alias of `docker container stop`. 
+
 Observe the time it takes to stop a container.
 
 #### `docker container kill`
@@ -555,9 +558,14 @@ ubuntu@docker-host:~$ docker kill 5db5a74490d5
 5db5a74490d5
 ```
 
+> [!NOTE]  
+> `docker kill` is an alias of `docker container kill`. 
+
 Observe the time it takes to kill a container.
 
 #### `docker stop` vs. `docker kill`
+
+Using `docker stop` provides a more graceful way to halt a container, allowing the main process to perform cleanup tasks before terminating. In contrast, the `docker kill` command forcefully stops the container immediately, without waiting for any cleanup. The decision between using `docker stop` and `docker kill` depends on whether you want to allow the processes inside the container time to clean up before termination.
 
 [Difference Between docker stop and docker kill Commands | Baeldung on Ops](https://www.baeldung.com/ops/docker-stop-vs-kill)
 
