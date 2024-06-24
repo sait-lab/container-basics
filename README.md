@@ -4,6 +4,52 @@
 
 [How Shipping Containers Revolutionized Global Trade](https://www.linkedin.com/pulse/how-shipping-containers-revolutionized-global-trade-david-conway-ycwyc)
 
+Table of Contents
+=================
+
+* [Container Basics](#container-basics)
+   * [Installing Docker](#installing-docker)
+   * [Docker Concepts](#docker-concepts)
+      * [What is a container?](#what-is-a-container)
+      * [What is an image?](#what-is-an-image)
+      * [What is a registry?](#what-is-a-registry)
+   * [Docker Engine](#docker-engine)
+      * [Under the Hood of docker run](#under-the-hood-of-docker-run)
+   * [Play with Docker](#play-with-docker)
+      * [Review Docker Terms](#review-docker-terms)
+      * [Docker CLI Cheat Sheet](#docker-cli-cheat-sheet)
+      * [Run Two Containers from the Same Image](#run-two-containers-from-the-same-image)
+      * [Docker Lifecycle Commands](#docker-lifecycle-commands)
+         * [docker run -d](#docker-run--d)
+         * [docker ps -a](#docker-ps--a)
+         * [docker start [OPTIONS] CONTAINER](#docker-start-options-container)
+         * [docker container attach](#docker-container-attach)
+         * [docker container stop](#docker-container-stop)
+         * [docker container kill](#docker-container-kill)
+         * [docker rm](#docker-rm)
+      * [Docker Image Commands](#docker-image-commands)
+         * [docker image ls](#docker-image-ls)
+         * [docker image rm](#docker-image-rm)
+         * [docker image prune](#docker-image-prune)
+   * [Building Images](#building-images)
+      * [Using docker image commit to create an image](#using-docker-image-commit-to-create-an-image)
+      * [Modify UppderDir](#modify-uppderdir)
+      * [OverlayFS](#overlayfs)
+      * [Writing a Dockerfile](#writing-a-dockerfile)
+      * [Build, tag, and publish an image](#build-tag-and-publish-an-image)
+         * [Building images](#building-images-1)
+         * [Tagging images](#tagging-images)
+         * [Publishing images](#publishing-images)
+   * [Running Containers](#running-containers)
+      * [Publishing Ports](#publishing-ports)
+      * [Persisting Container Data](#persisting-container-data)
+         * [Container volumes](#container-volumes)
+         * [Managing volumes](#managing-volumes)
+      * [Sharing local files with containers](#sharing-local-files-with-containers)
+         * [Volume versus bind mounts](#volume-versus-bind-mounts)
+         * [Sharing files between a host and container](#sharing-files-between-a-host-and-container)
+         * [File permissions for Docker access to host files](#file-permissions-for-docker-access-to-host-files)
+
 ## Installing Docker
 
 There are plenty of ways and places to get Docker up and running. You can do it on Windows, Mac, or Linux. Whether you want it in the cloud, on-prem, or right on your laptop with VMware Workstation or VirtualBox. 
