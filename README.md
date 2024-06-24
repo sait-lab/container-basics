@@ -122,7 +122,9 @@ Excerpt from https://docs.vmware.com/en/VMware-vSphere/8.0/vsphere-vm-administra
 
 
 > [!TIP]
-> A vSphere VM Template is a stopped VM. A container image is a stopped container. 
+> A vSphere VM Template is a stopped VM. A container image is a stopped container.
+>
+> In VMware vSphere, you can convert or clone a VM into a template. In Docker, you can commit a container to create an OCI container image.
 
 
 Search for images using the [`docker search`](https://docs.docker.com/reference/cli/docker/search/) command:
@@ -307,9 +309,8 @@ Credit: https://www.slideshare.net/slideshow/docker-41045742/41045742
 ### Review Docker Terms
 
 - **Image**: A container image is a read-only package that includes everything needed to run an application. This includes the application code, dependencies, a minimal set of OS constructs, and metadata. One image can be used to start multiple containers.
-	
-	> [!NOTE]  
-	> Image, Docker image, container image, and OCI image are interchangeable terms.
+> [!NOTE]  
+> Image, Docker image, container image, and OCI image are interchangeable terms.
 - **Container**: A container is simply an isolated process with all of the files it needs to run. If you run multiple containers, they all share the same kernel, allowing you to run more applications on less infrastructure.
 - **Registry**: An image registry is a centralized location for storing and sharing your container images. It can be either public or private. Docker Hub is a public registry that anyone can use and is the default registry.
 
