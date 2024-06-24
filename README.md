@@ -109,7 +109,10 @@ Excerpt from https://docs.vmware.com/en/VMware-vSphere/8.0/vsphere-vm-administra
 
 > VM Templates are primary copies of virtual machines that you can use to deploy virtual machines that are customized and ready for use. Templates promote consistency throughout your vSphere environment. You can use the content library to store and manage templates of virtual machines and vApps.
 
-A vSphere VM Template is a stopped VM. A container image is a stopped container. 
+
+> [!TIP]
+> A vSphere VM Template is a stopped VM. A container image is a stopped container. 
+
 
 Search for images using the [`docker search`](https://docs.docker.com/reference/cli/docker/search/) command:
 
@@ -225,6 +228,67 @@ https://docs.docker.com/docker-hub/quickstart/
 
 https://docs.docker.com/docker-hub/repos/
 
+GitHub and DockerHub serve parallel roles in their respective domains: GitHub for managing and sharing code, and DockerHub for managing and sharing container images.
+
+**Code vs. Container Images**: Just as developers push their code to GitHub to share and collaborate, they push their Docker images to DockerHub. Docker images are essentially packages of applications along with their dependencies, making them easy to distribute and run consistently across different environments.
+
+**Version Control**: Both platforms allow versioning. On GitHub, you have commits and branches for different versions of code. On DockerHub, you have tagged versions of container images.
+
+**Community and Collaboration**: GitHub provides a community space for developers to contribute to open-source projects. Similarly, DockerHub enables sharing of container images, fostering collaboration within the community to build and improve containerized applications.
+
+**Ease of Access**: Both platforms provide easy access to their respective resources. Developers can clone a repository from GitHub to get the code they need, just as they can pull an image from DockerHub to get the necessary container.
+
+
+
+## Docker Engine
+
+Excerpt from https://docs.docker.com/engine/:
+
+> Docker Engine is an open source containerization technology for building and containerizing your applications. Docker Engine acts as a client-server application with:
+>
+> - A server with a long-running daemon process [`dockerd`](https://docs.docker.com/reference/cli/dockerd).
+> - APIs which specify interfaces that programs can use to talk to and instruct the Docker daemon.
+> - A command line interface (CLI) client [`docker`](https://docs.docker.com/reference/cli/docker/).
+
+Excerpt from https://docs.docker.com/guides/docker-overview/#docker-architecture:
+
+> Docker uses a client-server architecture. The Docker client talks to the Docker daemon, which does the heavy lifting of building, running, and distributing your Docker containers. The Docker client and daemon can run on the same system, or you can connect a Docker client to a remote Docker daemon. The Docker client and daemon communicate using a REST API, over UNIX sockets or a network interface. Another Docker client is Docker Compose, that lets you work with applications consisting of a set of containers.
+
+<img src="./README.assets/docker-architecture.webp" alt="Docker Architecture diagram"  />
+
+> [!TIP]
+> Docker engine runs and manages containers. VMware ESXi runs and manages VMs.
+
+The main components of the Docker engine include the Docker daemon, the build system, containerd, runc, and various plugins like networking and volumes. These elements work together to create and run containers.
+
+![docker-engine-arch](./README.assets/docker-engine-arch.png)
+
+Credit: [Docker - Engine | i2tutorials](https://www.i2tutorials.com/docker-tutorial/docker-engine/)
+
+### Run a container - from the Docker engine's perspective
+
+[UNDERSTANDING DOCKER. 1 — INTRODUCTION : | by B.R.O.L.Y | Medium](https://medium.com/@ridwaneelfilali/docker-explained-86987249ad25)
+
+The following `docker run` command starts a container based on `hello-world` image from DockerHub:
+
+```
+docker run hello-world
+```
+
+Under the hood:
+
+1. You enter command `docker run hello-world` into the Docker CLI, the Docker client translates them into the appropriate API payload and sends them to the API endpoint provided by the Docker daemon.
+2. The daemon receives the command to create a new container, it calls containerd. Keep in mind that the daemon no longer contains any code for creating containers.
+3. containerd itself cannot create containers; it relies on runc for that task. It converts the necessary Docker image into an OCI bundle and instructs runc to use this bundle to create a new container.
+4. runc interacts with the OS kernel to assemble all the necessary constructs for creating a container, such as namespaces and cgroups. The container process begins as a child process of runc, and once it starts, runc exits.
+
+![docker-engine-run-container](./README.assets/docker-engine-run-container.webp)
+
+Credit: [Docker Engine Architecture Under the Hood | by Yeldos Balgabekov | Medium](https://medium.com/@yeldos/docker-engine-architecture-under-the-hood-741512b340d5)
+
+
+
+
 
 
 
@@ -233,7 +297,8 @@ https://docs.docker.com/docker-hub/repos/
 
 Todo List:
 
-- [ ] Describe Docker components
+- [x] Describe Docker components
+- [x] Docker engine
 - [ ] Docker lifecycle commands
 - [ ] Docker networking
 - [ ] Docker storage
