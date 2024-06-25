@@ -15,7 +15,7 @@ Table of Contents
       * [What is a registry?](#what-is-a-registry)
    * [Docker Engine](#docker-engine)
       * [Under the Hood of docker run](#under-the-hood-of-docker-run)
-   * [Play with Docker](#play-with-docker)
+   * [Essential Docker Commands](#essential-docker-commands)
       * [Review Docker Terms](#review-docker-terms)
       * [Docker CLI Cheat Sheet](#docker-cli-cheat-sheet)
       * [Run Two Containers from the Same Image](#run-two-containers-from-the-same-image)
@@ -49,6 +49,14 @@ Table of Contents
          * [Volume versus bind mounts](#volume-versus-bind-mounts)
          * [Sharing files between a host and container](#sharing-files-between-a-host-and-container)
          * [File permissions for Docker access to host files](#file-permissions-for-docker-access-to-host-files)
+   * [Docker Compose](#docker-compose)
+* [License](#license)
+
+
+
+---
+
+
 
 ## Installing Docker
 
@@ -354,7 +362,7 @@ Credit: [Docker Engine Architecture Under the Hood | by Yeldos Balgabekov | Medi
 
 
 
-## Play with Docker
+## Essential Docker Commands
 
 <img src="./README.assets/docker-components.jpeg" alt="docker-components" style="zoom:33%;" />
 Credit: https://www.slideshare.net/slideshow/docker-41045742/41045742
@@ -1445,11 +1453,13 @@ ubuntu@docker-host:~$ curl 127.0.0.1:80
 Peter Parker was here
 ```
 
-Modify the `index.html` on the host, don't restart or stop the nginx container. Verify the nginx container has real-time file access to the modified file.
+Modify the `index.html` on the host, don't restart or stop the nginx container. Verify that the nginx container has real-time file access to the modified file.
 
 ```
 # These commands run on the host
+
 ubuntu@docker-host:~$ echo 'Iron man was here too' >> ~/nginx-html/index.html
+
 ubuntu@docker-host:~$ curl 127.0.0.1:80
 Peter Parker was here
 Iron man was here too
@@ -1460,6 +1470,7 @@ Iron man was here too
 When using bind mounts, it's crucial to ensure that Docker has the necessary permissions to access the host directory. To grant read/write access, you can use the `:ro` flag (read-only) or `:rw` (read-write) with the `-v` or `--mount` flag during container creation. For example, the following command grants read-write access permission.
 
 ```console
+# This command runs on the host
 $ docker run -v HOST-DIRECTORY:/CONTAINER-DIRECTORY:rw nginx
 ```
 
@@ -1467,8 +1478,53 @@ Read-only bind mounts let the container access the mounted files on the host for
 
 
 
+## Docker Compose
+
+Excerpt from [Docker Compose overview | Docker Docs](https://docs.docker.com/compose/)
+
+> Docker Compose is a tool for defining and running multi-container applications. It is the key to unlocking a streamlined and efficient development and deployment experience.
+>
+> Compose simplifies the control of your entire application stack, making it easy to manage services, networks, and volumes in a single, comprehensible YAML configuration file. Then, with a single command, you create and start all the services from your configuration file.
+>
+> Compose works in all environments; production, staging, development, testing, as well as CI workflows. It also has commands for managing the whole lifecycle of your application:
+>
+> - Start, stop, and rebuild services
+> - View the status of running services
+> - Stream the log output of running services
+> - Run a one-off command on a service
+
+<details>
+  <summary>Install Docker Compose</summary>
+  https://docs.docker.com/compose/install/linux/ <br>
+  https://docs.docker.com/compose/install/standalone/
+</details>
+[Docker Compose Quickstart | Docker Docs](https://docs.docker.com/compose/gettingstarted/)
+
+[Samples of Docker Compose applications with multiple integrated services](https://github.com/docker/awesome-compose#samples-of-docker-compose-applications-with-multiple-integrated-services)
+
+
+
 ---
 
-Todo List:
 
-- [ ] Docker compose
+
+# License
+
+This document is licensed under the Creative Commons Attribution 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
+
+### You are free to:
+
+- **Share** — copy and redistribute the material in any medium or format for any purpose, even commercially.
+- **Adapt** — remix, transform, and build upon the material for any purpose, even commercially.
+- The licensor cannot revoke these freedoms as long as you follow the license terms.
+
+### Under the following terms:
+
+- **Attribution** — You must give [appropriate credit](https://creativecommons.org/licenses/by/4.0/deed.en#ref-appropriate-credit), provide a link to the license, and [indicate if changes were made](https://creativecommons.org/licenses/by/4.0/deed.en#ref-indicate-changes). You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+- **No additional restrictions** — You may not apply legal terms or [technological measures](https://creativecommons.org/licenses/by/4.0/deed.en#ref-technological-measures)that legally restrict others from doing anything the license permits.
+
+### Notices:
+
+You do not have to comply with the license for elements of the material in the public domain or where your use is permitted by an applicable [exception or limitation](https://creativecommons.org/licenses/by/4.0/deed.en#ref-exception-or-limitation).
+
+No warranties are given. The license may not give you all of the permissions necessary for your intended use. For example, other rights such as [publicity, privacy, or moral rights](https://creativecommons.org/licenses/by/4.0/deed.en#ref-publicity-privacy-or-moral-rights) may limit how you use the material.
