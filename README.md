@@ -841,8 +841,11 @@ ubuntu@docker-host:~$ docker image inspect --format='{{json .RootFS}}' ubuntu | 
 }
 ```
 > [!TIP]  
-> `jq`, a command-line JSON processing tool, is a good solution for dealing with machine-readable data formats and is especially useful in shell scripts. 
+> `jq`, a command-line JSON processing tool, is a good solution for dealing with machine-readable data formats and is especially useful in shell scripts.
+>
+>
 > https://jqlang.github.io/jq/
+>
 > https://www.digitalocean.com/community/tutorials/how-to-transform-json-data-with-jq
 
 To prove your new image has the `/a.txt` file, you can start a new container using this new image:
@@ -1498,7 +1501,7 @@ Excerpt from [Docker Compose overview | Docker Docs](https://docs.docker.com/com
   https://docs.docker.com/compose/install/linux/ <br>
   https://docs.docker.com/compose/install/standalone/
 </details>
-[Docker Compose Quickstart | Docker Docs](https://docs.docker.com/compose/gettingstarted/)
+https://docs.docker.com/compose/gettingstarted/
 
 [Samples of Docker Compose applications with multiple integrated services](https://github.com/docker/awesome-compose#samples-of-docker-compose-applications-with-multiple-integrated-services)
 
